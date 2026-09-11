@@ -53,8 +53,9 @@ export function ContextHelpLink({ context, label, className = '' }: { context: H
             const response = await fetch(`/api/analyses/${encodeURIComponent(analysisId)}`);
             const data = await response.json();
             if (data?.ok && (data.analysis?.type === 'summary' || data.analysis?.type === 'revision')) {
-              type = data.analysis.type;
-              analysisTypeCache.set(analysisId, type);
+              const fetchedType: HelpAnalysisType = data.analysis.type;
+              type = fetchedType;
+              analysisTypeCache.set(analysisId, fetchedType);
             }
           } catch {
             // Contextual help must still open even if the analysis refresh fails.
