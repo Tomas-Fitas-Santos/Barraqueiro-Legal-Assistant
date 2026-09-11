@@ -2,6 +2,7 @@
 
 import { CircleHelp } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import type { MouseEvent } from 'react';
 
 import { useHelpDrawer } from '@/components/help/help-provider';
 import {
@@ -38,7 +39,7 @@ export function ContextHelpLink({ context, label, className = '' }: { context: H
   const definition = helpContext(context);
   const accessible = label || `Ajuda: ${definition.label}`;
 
-  async function handleClick(event: React.MouseEvent<HTMLButtonElement>) {
+  async function handleClick(event: MouseEvent<HTMLButtonElement>) {
     const anchor = event.currentTarget;
     let resolved = context;
     let type = contextType(context);
