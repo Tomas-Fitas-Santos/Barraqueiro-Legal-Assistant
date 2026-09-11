@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, BookOpen, Check, ChevronRight, FileText, Mail, X } from 'lucide-react';
 
-import { AnalysisTabs, DetalhesTab, EmailEditor, FeedBubble, HistoricoTab, PhaseStepper, type Analysis, type AnalysisDocument, type Conversion, type FeedEntry, type Item, type Panel, type PathInfo, type StageDef } from '@/components/analyses/analysis-chat-view';
+import { AnalysisTabs, EmailEditor, FeedBubble, HistoricoTab, PhaseStepper, type Analysis, type AnalysisDocument, type Conversion, type FeedEntry, type Item, type Panel, type PathInfo, type StageDef } from '@/components/analyses/analysis-chat-view';
 import { ExtractionReview } from '@/components/analyses/extraction-review';
 import { NewAnalysisWizard } from '@/components/analyses/new-analysis-wizard';
 import { ContextHelpLink } from '@/components/help/context-help-link';
