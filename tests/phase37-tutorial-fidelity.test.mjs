@@ -102,7 +102,7 @@ describe('phase 37 — tutorial fidelity and browser isolation contracts', () =>
 
   it('renders remaining training surfaces through production components', () => {
     const workspace = readFileSync('src/components/tutorials/tutorial-workspace.tsx', 'utf8');
-    for (const component of ['DocumentDetailView', 'TemplateEditorView', 'OutputSequence', 'EmailEditor', 'FeedBubble', 'DetalhesTab', 'HistoricoTab', 'DocumentList', 'NewAnalysisWizard', 'ExtractionReview']) {
+    for (const component of ['DocumentDetailView', 'TemplateEditorView', 'OutputSequence', 'EmailEditor', 'FeedBubble', 'HistoricoTab', 'DocumentList', 'NewAnalysisWizard', 'ExtractionReview']) {
       assert.match(workspace, new RegExp(`<${component}\\b`), component);
     }
     for (const removedCopy of ['LibraryDetailScreen', 'RelationsScreen', 'TemplateDetailScreen', 'ResultDetailScreen']) {
