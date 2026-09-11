@@ -5,6 +5,10 @@ on:
     branches:
       - fix/validate-production
 
+concurrency:
+  group: temporary-full-production-validation
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -73,7 +77,7 @@ jobs:
   tests:
     needs: autofix
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -83,7 +87,26 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run test:fast
+      - name: Run every test file and report all failures
+        shell: bash
+        run: |
+          set +e
+          failed=0
+          for file in tests/*.test.mjs; do
+            echo "::group::$file"
+            timeout 45s node --test --test-concurrency=1 "$file"
+            status=$?
+            echo "::endgroup::"
+            if [ $status -ne 0 ]; then
+              if [ $status -eq 124 ]; then
+                echo "::error file=$file::Test file timed out after 45 seconds"
+              else
+                echo "::error file=$file::Test file failed with exit code $status"
+              fi
+              failed=1
+            fi
+          done
+          exit $failed
 
   docker-build:
     needs: autofix
