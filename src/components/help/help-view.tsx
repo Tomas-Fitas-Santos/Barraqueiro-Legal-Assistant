@@ -40,8 +40,8 @@ export function HelpView({ context = '', returnTo = '' }: { context?: string; re
   const chapters = groupSections(HELP_SECTIONS);
 
   return <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-    <PageHeader title="Ajuda" description="Encontre uma tarefa ou consulte a explicação completa no ponto em que surgiu a dúvida." actions={returnTo.startsWith('/') ? <Link href={returnTo as Route} className="ui-btn-secondary inline-flex items-center gap-2 rounded-md px-3.5 py-1.5 text-base no-underline"><ArrowLeft aria-hidden className="h-4 w-4" /> Voltar ao trabalho</Link> : undefined} />
-    {definition ? <div className="mb-3 flex shrink-0 items-center gap-2 rounded-lg border border-accent bg-accent-ghost px-4 py-2.5 text-sm text-ink1"><HelpSymbol /><span>Tópico aberto: <strong className="text-ink0">{definition.label}</strong></span></div> : null}
+    <PageHeader title="Ajuda" description="Siga as instruções passo a passo para a Biblioteca, o Resumo documental ou a Revisão / Atualização." actions={returnTo.startsWith('/') ? <Link href={returnTo as Route} className="ui-btn-secondary inline-flex items-center gap-2 rounded-md px-3.5 py-1.5 text-base no-underline"><ArrowLeft aria-hidden className="h-4 w-4" /> Voltar ao trabalho</Link> : undefined} />
+    {definition ? <div className="mb-3 flex shrink-0 items-center gap-2 rounded-lg border border-accent bg-accent-ghost px-4 py-2.5 text-sm text-ink1"><HelpSymbol /><span>Instrução aberta: <strong className="text-ink0">{definition.label}</strong></span></div> : null}
     <div className="grid min-h-0 flex-1 grid-rows-[13rem_minmax(0,1fr)] gap-4 overflow-hidden md:grid-cols-[20rem_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)]">
       <HelpNav sections={HELP_SECTIONS} scrollerId={SCROLLER_ID} />
       <div id={SCROLLER_ID} className="min-h-0 overflow-y-auto overscroll-contain rounded-xl pr-1" tabIndex={0} aria-label="Conteúdo da Ajuda">

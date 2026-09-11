@@ -131,12 +131,23 @@ export function NewAnalysisWizard({ tutorial }: { tutorial?: TutorialWizardState
     }
   }
 
+  const helpActions = step === 0 ? (
+    <>
+      <ContextHelpLink context="analysis.summary.create" label="Ajuda: Resumo" />
+      <ContextHelpLink context="analysis.revision.create" label="Ajuda: Revisão" />
+    </>
+  ) : type === 'revision' ? (
+    <ContextHelpLink context={step === 2 ? 'analysis.revision.sources' : 'analysis.revision.create'} label="Ajuda desta página" />
+  ) : (
+    <ContextHelpLink context={step === 2 ? 'analysis.summary.sources' : 'analysis.summary.create'} label="Ajuda desta página" />
+  );
+
   return (
     <div className={`mx-auto flex min-h-0 w-full flex-1 flex-col overflow-hidden ${step === 1 || step === 2 ? 'max-w-[84rem]' : 'max-w-5xl'}`}>
       <PageHeader
         title="Nova análise"
         description="Quatro passos para escolher as fontes e confirmar o trabalho."
-        actions={<div className="flex items-center gap-2"><ContextHelpLink context={step === 2 ? 'analysis.relations' : 'analysis.sources'} label="Ajuda desta página" /><Link href="/" className="ui-btn-secondary rounded-md px-3.5 py-1.5 text-base no-underline">Cancelar</Link></div>}
+        actions={<div className="flex items-center gap-2">{helpActions}<Link href="/" className="ui-btn-secondary rounded-md px-3.5 py-1.5 text-base no-underline">Cancelar</Link></div>}
       />
 
       <ol className="ui-panel m-0 mb-6 flex list-none items-center justify-center gap-2 overflow-x-auto rounded-xl px-3 py-2">

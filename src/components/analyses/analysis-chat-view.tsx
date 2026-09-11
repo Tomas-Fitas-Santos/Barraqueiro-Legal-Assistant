@@ -124,7 +124,7 @@ const PANEL_TITLES: Record<Panel['mode'], string> = {
   version: 'Pré-visualização',
   docx: 'Documento Word',
   pdf: 'PDF',
-  items: 'Rever a extração',
+  items: 'Rever resultados encontrados',
   edit: 'Editar documento',
   email: 'Rascunho de e-mail',
   node: 'Fase da análise',
@@ -380,8 +380,6 @@ export function AnalysisChatView({ analysisId }: { analysisId: string }) {
     }
   }
 
-
-
   if (gone) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
@@ -482,37 +480,7 @@ export function AnalysisChatView({ analysisId }: { analysisId: string }) {
 
       <div className="grid min-h-0 flex-1 gap-5 overflow-hidden">
         <div className="flex min-h-0 min-w-0 flex-col overflow-hidden">
-          {panelStack[0]?.mode === 'items' ? (
-            <div className="ui-panel flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
-              <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line0 px-5 py-3">
-                <div>
-                  <h2 className="m-0 text-xl font-semibold text-ink0">Rever resultados encontrados</h2>
-                  <p className="mt-0.5 mb-0 text-sm ui-text-muted">Comece pelo que requer uma decisão sua. A fonte abre ao lado sem perder o ponto.</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => setPanelStack([])} className="ui-btn-secondary rounded-md px-3 py-1.5 text-sm">← Voltar ao trabalho</button>
-                </div>
-              </header>
-              <div className="min-h-0 flex-1 overflow-y-auto p-5">
-                <ExtractionReview
-                  analysisId={analysisId}
-                  path={shownPath}
-                  canDecide={analysis.state === 'pronta_para_revisao' || analysis.state === 'aprovada'}
-                  onOpenSource={(documentId, page, excerpt) => pushPanel({ mode: 'document', documentId, page, excerpt })}
-                  onRefresh={refresh}
-                  approval={workflow.actions.find((action) => action.id === 'approve_extraction') || null}
-                  onApprove={async (action) => {
-                    await act(action.label, action.path);
-                    setPanelStack([]);
-                  }}
-                  onRejected={() => {
-                    setPanelStack([]);
-                    void refresh();
-                  }}
-                />
-              </div>
-            </div>
-          ) : tab === 'detalhes' ? (
+          {tab === 'detalhes' ? (
             <div className="min-h-0 flex-1 overflow-y-auto pr-1">
             <div className="grid content-start gap-5">
             <DetalhesTab
@@ -634,7 +602,7 @@ export function AnalysisChatView({ analysisId }: { analysisId: string }) {
           )}
         </div>
 
-        {panel && !(panelStack.length === 1 && panel.mode === 'items') ? (
+        {panel ? (
           <SidePanel
             panel={panel}
             depth={panelStack.length}
@@ -651,6 +619,7 @@ export function AnalysisChatView({ analysisId }: { analysisId: string }) {
             onClose={() => setPanelStack([])}
             onRefresh={refresh}
             onTrackBack={trackBack}
+            onAct={act}
           />
         ) : null}
       </div>
@@ -733,8 +702,6 @@ export function FeedBubble({
 }) {
   const time = new Date(entry.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  // A turn the server voiced for the user: the opening request, or a decision that took
-  // many clicks and is said once.
   if (entry.kind === 'user_said') {
     return <UserBubble time={time}>{String(entry.data.text || '')}</UserBubble>;
   }
@@ -743,7 +710,6 @@ export function FeedBubble({
     const kind = entry.kind.slice(6);
     const sentence = eventChatSentence(kind, entry.data, analysisType);
     if (!sentence) return null;
-    // An approval is something the USER did; it reads as theirs.
     return eventVoice(kind) === 'user' ? (
       <UserBubble time={time}>{sentence}</UserBubble>
     ) : (
@@ -751,7 +717,6 @@ export function FeedBubble({
     );
   }
 
-  // --- the extraction: the structured output, openable at any phase ----------------------
   if (entry.kind === 'extraction') {
     const e = entry.data as {
       extractionId: string;
@@ -780,7 +745,6 @@ export function FeedBubble({
     );
   }
 
-  // --- the Word document: the draft of the final document --------------------------------
   if (entry.kind === 'version') {
     const v = entry.data as {
       versionId: string;
@@ -828,7 +792,6 @@ export function FeedBubble({
     );
   }
 
-  // --- the final PDF: its own card, produced by approving the Word document --------------
   if (entry.kind === 'conversion') {
     const c = entry.data as unknown as Conversion;
     const tone = CONV_TONES[c.state];
@@ -859,8 +822,6 @@ export function FeedBubble({
             {msg('card.pdf.open')}
           </button>
         ) : null}
-        {/* The same analysis as data — every statement with its citation and whether it
-            was accepted or rejected. Written into the analysis's folder on OneDrive too. */}
         {c.jsonFilename ? (
           <a
             href={`/api/analyses/${analysisId}/conversions/${c.conversionId}/json`}
@@ -896,7 +857,6 @@ export function FeedBubble({
     );
   }
 
-  // --- the e-mail: the draft as it will be sent -------------------------------------------
   if (entry.kind === 'email') {
     const e = entry.data as {
       to: string;
@@ -1013,13 +973,6 @@ export function FeedBubble({
   return null;
 }
 
-/**
- * The phase gate: what the workflow is waiting for, and the actions no artifact card owns.
- *
- * Approving the extraction, the document, the PDF and the e-mail all live on their own
- * cards now — the gate used to offer them a second time, targeting the latest artifact
- * while the card targeted the one you were looking at.
- */
 function PhaseGate(props: {
   workflow: WorkflowStatus;
   analysisId: string;
@@ -1032,7 +985,6 @@ function PhaseGate(props: {
 }) {
   const { workflow, pendingDocs, busy, onAct, onDownload, onOpen, onDecideDocument } = props;
 
-  // An operation in flight: the agent is speaking, there is nothing to press.
   if (workflow.progress) {
     return (
       <div className="ui-panel mr-12 flex items-center gap-3 rounded-lg border border-accent-ghost p-3.5">
@@ -1046,8 +998,6 @@ function PhaseGate(props: {
     );
   }
 
-  // Concluded: the closing bubble already said so, and the notice below says how to reopen.
-  // A third sentence here would be the fourth way of saying one thing.
   if (workflow.closed) return null;
 
   const failed = workflow.failure;
@@ -1056,7 +1006,6 @@ function PhaseGate(props: {
       <div className="grid gap-2.5">
         <p className="m-0 text-base">{workflow.phase.headline}</p>
 
-        {/* Configuração: each related document is decided here, one row per document. */}
         {pendingDocs.length > 0 ? (
           <div className="grid gap-2">
             {pendingDocs.map((doc) => (
@@ -1069,10 +1018,6 @@ function PhaseGate(props: {
                   {relatedDocumentRelationLabel(doc.relationType) ? (
                     <span className="ui-text-muted"> — {relatedDocumentRelationLabel(doc.relationType)}</span>
                   ) : null}
-                  {/* §5.3: the user confirms each document individually, so the decision
-                      has to be makeable HERE — version and date say which document this is,
-                      the band says how much it would change the analysis, and the excerpts
-                      are the evidence behind both. */}
                   {doc.versionLabel || doc.issuedDate ? (
                     <span className="ui-text-muted">
                       {' '}
@@ -1088,10 +1033,6 @@ function PhaseGate(props: {
                       {RELEVANCE_LABELS[doc.relevance]}
                     </span>
                   ) : null}
-                  {/* Beside it, not instead of it: relevância says how much this document
-                      would change the analysis, confiança says whether the link exists at
-                      all. "Highly relevant, no evidence" is a real and common combination,
-                      and one band would hide exactly that case. */}
                   <ConfidencePill confidence={doc.confidence} className="ml-2" small />
                 </span>
                 <span className="flex gap-2">
@@ -1128,7 +1069,6 @@ function PhaseGate(props: {
           </div>
         ) : null}
 
-        {/* What stops the way out — named, never left to be inferred from a dead button. */}
         {workflow.blockers.map((blocker) => (
           <p key={blocker.id} className="ui-pill-warn m-0 rounded-md px-2.5 py-1 text-sm">
             🔒 {blocker.message}
@@ -1160,10 +1100,6 @@ function PhaseGate(props: {
   );
 }
 
-/**
- * The shell every artifact card shares. A superseded artifact renders as one line until it
- * is expanded — the log keeps everything, the eye goes to what is live.
- */
 function ArtifactCard({
   icon,
   title,
@@ -1254,12 +1190,6 @@ function Avatar() {
   );
 }
 
-/** The user's own words — their requests, and now their approvals. */
-// Who is speaking is carried by WHERE the message sits, the way every chat the reader has
-// ever used does it: the assistant on the left behind its avatar, the user on the right.
-// Neither side spans the column, so the alternation is visible at a glance instead of
-// having to be read.
-
 function UserBubble({ children, time }: { children: React.ReactNode; time?: string }) {
   return (
     <div className="flex justify-end">
@@ -1282,8 +1212,6 @@ function AssistantBubble({ children, time }: { children: React.ReactNode; time?:
     </div>
   );
 }
-
-// --- Detalhes: the configuration and everything worth knowing at a glance -------------
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -1356,9 +1284,6 @@ export function DetalhesTab({
                     >
                       {doc.status === 'confirmed' ? 'confirmado' : doc.status === 'excluded' ? 'excluído' : 'por decidir'}
                     </span>
-                    {/* The decision and the evidence are different facts. Confirming a
-                        document does not turn "we found no reference to it anywhere" into
-                        something else, and that is exactly when it is still worth seeing. */}
                     <ConfidencePill confidence={doc.confidence} className="mr-2" />
                     <button
                       type="button"
@@ -1478,8 +1403,6 @@ export function DetalhesTab({
   );
 }
 
-// --- Histórico: the workflow as a graph of paths × stages ------------------------------
-
 export function HistoricoTab({
   feed,
   analysisType,
@@ -1516,8 +1439,6 @@ export function HistoricoTab({
   tutorialActivatePathTarget?: string;
 }) {
   return (
-    // Only as tall as the graph needs: one path fits without growing, a new branch adds a
-    // line, and the page height is the ceiling — past it the graph scrolls inside.
     <div data-tutorial-target={tutorialTarget} className="ui-panel flex max-h-full flex-col overflow-hidden rounded-xl">
       <div className="shrink-0 px-5 pb-3 pt-5">
         <h2 className="m-0 mb-1.5 text-xl font-semibold text-ink0">{VERSION_LANGUAGE.section}</h2>
@@ -1594,8 +1515,6 @@ function auditIdentifier(entry: FeedEntry): string {
   return String(entry.data.versionId || entry.data.extractionId || entry.data.conversionId || entry.data.turnId || entry.data.eventId || '—');
 }
 
-// --- the side panel --------------------------------------------------------------------
-
 function SidePanel({
   panel,
   depth,
@@ -1612,6 +1531,7 @@ function SidePanel({
   onClose,
   onRefresh,
   onTrackBack,
+  onAct,
 }: {
   panel: Panel;
   depth: number;
@@ -1628,8 +1548,8 @@ function SidePanel({
   onClose: () => void;
   onRefresh: () => Promise<void>;
   onTrackBack: (stage: { key: string; restart: string }, guidance: string) => Promise<void>;
+  onAct: (label: string, path: string) => Promise<void>;
 }) {
-  // An editor holds unsaved text, so it does not close on a stray backdrop click or Escape.
   const dismissible = panel.mode !== 'edit' && panel.mode !== 'email';
   return (
     <SlideOver
@@ -1695,6 +1615,15 @@ function SidePanel({
             canDecide={canDecideItems}
             onOpenSource={(documentId, page, excerpt) => onOpen({ mode: 'document', documentId, page, excerpt })}
             onRefresh={onRefresh}
+            approval={data.workflow.actions.find((action) => action.id === 'approve_extraction') || null}
+            onApprove={async (action) => {
+              await onAct(action.label, action.path);
+              onClose();
+            }}
+            onRejected={() => {
+              onClose();
+              void onRefresh();
+            }}
           />
         )}
       </div>
@@ -1702,8 +1631,6 @@ function SidePanel({
   );
 }
 
-/** The e-mail as it will look, in the chat: read it, open it to edit, or download it. */
-/** Edit the e-mail in-app and save it — the .eml is built from exactly this. */
 export function EmailEditor({ analysisId, onSaved, tutorial, readOnly = false }: { analysisId: string; onSaved: () => Promise<void>; tutorial?: { to: string; cc: string; subject: string; body: string; target?: string }; readOnly?: boolean }) {
   const [content, setContent] = useState<{ to: string; cc: string; subject: string; body: string } | null>(tutorial || null);
   const [saving, setSaving] = useState(false);
@@ -1778,7 +1705,6 @@ export function EmailEditor({ analysisId, onSaved, tutorial, readOnly = false }:
   );
 }
 
-/** Edit a generated document's sections in-app; saving creates a NEW version (§14). */
 function SectionEditor({
   analysisId,
   versionId,
@@ -1872,7 +1798,6 @@ function SectionEditor({
   );
 }
 
-/** What happened in one phase of one path — real content, not a log. */
 function NodeDetails({
   analysisId,
   data,
@@ -1896,12 +1821,7 @@ function NodeDetails({
   const [reverting, setReverting] = useState(false);
   const [guidance, setGuidance] = useState('');
   const { analysis, documents, items } = data;
-  // You can only go BACK: a phase at or after where the work currently stands is not a
-  // revert, it is the work itself. Configuration is excluded too — it is the starting
-  // point, and changing it means a new analysis.
   const stageIndex = stages.findIndex((s) => s.key === node.stageKey);
-  // A node on another path is always revertable: "before the current phase" is a statement
-  // about the path being worked on, not about the one you are reading.
   const isPastPhase =
     stageIndex >= 0 && (node.pathLetter !== data.workflow.path || stageIndex < data.workflow.phase.index);
   const canRevert = Boolean(stage) && node.stageKey !== 'configuracao' && isPastPhase;
@@ -1930,7 +1850,6 @@ function NodeDetails({
         </p>
       </div>
 
-      {/* A recomeço exists because of a reason the user gave — show it, in full. */}
       {node.entries
         .filter((e) => e.kind === 'event:tracked_back')
         .map((e, i) => (
@@ -2184,7 +2103,6 @@ function NodeDetails({
   );
 }
 
-/** The e-mail phase: the draft exactly as it will be sent. */
 function EmailPhaseView({ analysisId, onOpen }: { analysisId: string; onOpen: (panel: Panel) => void }) {
   const [data, setData] = useState<{
     content: { to: string; cc: string; subject: string; body: string };
@@ -2228,7 +2146,6 @@ function EmailPhaseView({ analysisId, onOpen }: { analysisId: string; onOpen: (p
   );
 }
 
-/** Real Word rendering in the browser (docx-preview renders the actual DOCX layout). */
 function VersionPreview({
   analysisId,
   versionId,
@@ -2319,4 +2236,3 @@ function VersionPreview({
     </div>
   );
 }
-
