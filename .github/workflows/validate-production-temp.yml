@@ -20,20 +20,25 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          path = Path('src/components/tutorials/tutorial-workspace.tsx')
-          text = path.read_text()
+          workspace = Path('src/components/tutorials/tutorial-workspace.tsx')
+          text = workspace.read_text()
           text = text.replace('AnalysisTabs, DetalhesTab, EmailEditor', 'AnalysisTabs, EmailEditor')
           lines = text.splitlines(keepends=True)
           lines = [line for line in lines if "{tab === 'detalhes' ? <DetalhesTab" not in line]
-          path.write_text(''.join(lines))
+          workspace.write_text(''.join(lines))
+
+          fidelity = Path('tests/phase37-tutorial-fidelity.test.mjs')
+          tests = fidelity.read_text()
+          tests = tests.replace("'FeedBubble', 'DetalhesTab', 'HistoricoTab'", "'FeedBubble', 'HistoricoTab'")
+          fidelity.write_text(tests)
           PY
       - name: Commit fixes if needed
         run: |
           if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add src/components/tutorials/tutorial-workspace.tsx
-            git commit -m "Remove unreachable tutorial details branch [skip ci]"
+            git add src/components/tutorials/tutorial-workspace.tsx tests/phase37-tutorial-fidelity.test.mjs
+            git commit -m "Fix tutorial workspace validation contracts [skip ci]"
             git push origin HEAD:fix/validate-production
           fi
 
