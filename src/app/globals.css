@@ -1,0 +1,360 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * The palette is Grupo Barraqueiro's, keyed to the navy of their logo: #0F2A6A.
+ *
+ * That navy is the DARKER of the two accent stops rather than the accent itself. Used
+ * directly as `--accent` it would be too dark for everything derived from it — `.ui-link`
+ * mixes the accent with the ink, and navy-mixed-with-near-black is indistinguishable from
+ * body text, so links would lose their affordance entirely. `--accent` is therefore the
+ * same hue and saturation lifted in lightness (220°, 74%), and `--accent-strong` is the
+ * exact brand navy: the primary button's gradient literally ends in the client's colour.
+ *
+ * The neutrals carry a matching cool cast, replacing the violet tint of the Naten palette
+ * this started from.
+ */
+:root {
+  --bg-0: #eef2f9;
+  --bg-1: #f8fafd;
+  --ink-0: #0c1626;
+  --ink-1: #213047;
+  --ink-2: #5a6c88;
+  --line-0: #d7deeb;
+  --line-1: #bfcbde;
+  --surface: #ffffff;
+  --surface-strong: #ffffff;
+  --surface-soft: #f5f8fd;
+  --surface-user: #e4ecfa;
+  --accent: #1c4fbd;
+  --accent-strong: #0f2a6a;
+  --accent-soft: rgba(28, 79, 189, 0.12);
+  --accent-ghost: #dde7f8;
+  --bg-glow-a: #e3ebf9;
+  --bg-glow-b: #dae5f7;
+  --danger: #b43f3f;
+  --ok: #1f8c56;
+  --warn: #9a6b06;
+  --radius-xl: 18px;
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --shadow-a: 0 22px 45px rgba(12, 22, 38, 0.10);
+  --shadow-b: 0 8px 20px rgba(12, 22, 38, 0.07);
+}
+
+html {
+  color-scheme: light;
+}
+
+/*
+ * Night keeps the same hue family. The brand navy itself cannot be the accent here — it is
+ * darker than the surfaces it would have to sit on — so both stops move up in lightness,
+ * staying on the logo's hue. `--accent-strong` remains the darker of the two because the
+ * primary button is a gradient down into it under white text.
+ */
+html[data-theme='night'] {
+  color-scheme: dark;
+  --bg-0: #0a0f1a;
+  --bg-1: #111827;
+  --ink-0: #eef3fb;
+  --ink-1: #cfdcef;
+  --ink-2: #9fb2cd;
+  --line-0: #2c3d57;
+  --line-1: #41567a;
+  --surface: #151d2c;
+  --surface-strong: #151d2c;
+  --surface-soft: #1a2333;
+  --surface-user: #1e2b45;
+  --accent: #6b96ea;
+  --accent-strong: #4a72c4;
+  --accent-soft: rgba(107, 150, 234, 0.16);
+  --accent-ghost: #22345a;
+  --bg-glow-a: rgb(30 58 120 / 34%);
+  --bg-glow-b: rgb(23 45 96 / 30%);
+  --danger: #ff8e8e;
+  --ok: #58c989;
+  --warn: #f2c26f;
+  --shadow-a: 0 22px 45px rgba(2, 6, 12, 0.5);
+  --shadow-b: 0 10px 24px rgba(2, 6, 12, 0.36);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Global scale lever: every Tailwind rem-based size (type, padding, gaps) keys off this.
+     17px root makes the whole app ~6% larger without touching individual utility classes. */
+  html {
+    font-size: 17px;
+  }
+
+  html,
+  body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    color: var(--ink-0);
+    background:
+      radial-gradient(circle at 10% 5%, var(--bg-glow-a) 0, transparent 28%),
+      radial-gradient(circle at 85% 90%, var(--bg-glow-b) 0, transparent 35%),
+      linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    background-attachment: fixed;
+  }
+
+  html[data-theme='night'],
+  html[data-theme='night'] body {
+    background:
+      radial-gradient(circle at 10% 5%, var(--bg-glow-a) 0, transparent 34%),
+      radial-gradient(circle at 85% 90%, var(--bg-glow-b) 0, transparent 42%),
+      linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    background-attachment: fixed;
+  }
+
+  body {
+    font-family: var(--font-heading), sans-serif;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  input,
+  select,
+  button,
+  textarea,
+  code,
+  pre {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .ui-panel {
+    border: 1px solid var(--line-0);
+    background: color-mix(in srgb, var(--surface) 92%, var(--accent-ghost) 8%);
+    box-shadow: var(--shadow-b);
+  }
+
+  .ui-soft-panel {
+    border: 1px solid var(--line-0);
+    background: color-mix(in srgb, var(--surface-soft) 74%, var(--surface) 26%);
+  }
+
+  /* These classes carry their own geometry — padding, radius, alignment — so that using one
+     bare is already correct. They used to be colour-only, which meant every caller had to
+     remember `w-full rounded-md px-3 py-2` alongside them; the template editors did not, and
+     were the only screens in the app whose controls looked unlike the rest of it.
+
+     Adding geometry here is safe for the callers that DO pass those utilities: these rules
+     live in the components layer and Tailwind emits utilities after it, so at equal
+     specificity the caller still wins. This sets the floor, it does not override anybody. */
+  .ui-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--line-1);
+    background: color-mix(in srgb, var(--surface) 88%, var(--surface-soft) 12%);
+    color: var(--ink-0);
+    border-radius: var(--radius-md);
+  }
+
+  .ui-input:focus-visible {
+    outline: 2px solid var(--accent-soft);
+    outline-offset: 1px;
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--line-1) 45%);
+  }
+
+  .ui-code {
+    border: 1px solid var(--line-0);
+    background: color-mix(in srgb, var(--surface-soft) 84%, var(--surface) 16%);
+    color: var(--ink-0);
+  }
+
+  .ui-btn,
+  .ui-btn-secondary,
+  .ui-btn-primary,
+  .ui-btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--radius-md);
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .ui-btn:disabled,
+  .ui-btn-secondary:disabled,
+  .ui-btn-primary:disabled,
+  .ui-btn-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* A square button holding a single glyph: same height as a text button, no text to set
+     its width, so the width is stated rather than left to the padding. */
+  .ui-btn-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    flex: none;
+  }
+
+  .ui-btn-secondary {
+    border: 1px solid color-mix(in srgb, var(--line-1) 78%, var(--accent) 22%);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface) 88%, var(--accent-ghost) 12%),
+      color-mix(in srgb, var(--surface-soft) 84%, var(--accent-ghost) 16%)
+    );
+    color: var(--ink-1);
+  }
+
+  .ui-btn-secondary:hover {
+    border-color: color-mix(in srgb, var(--line-1) 62%, var(--accent) 38%);
+  }
+
+  .ui-btn-primary {
+    border: 1px solid color-mix(in srgb, var(--accent) 80%, var(--accent-strong) 20%);
+    background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+    color: #fff;
+  }
+
+  .ui-btn-primary:hover {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--accent-strong) 45%);
+  }
+
+  .ui-btn-danger {
+    border: 1px solid color-mix(in srgb, var(--danger) 48%, var(--line-1) 52%);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface) 88%, var(--danger) 12%),
+      color-mix(in srgb, var(--surface-soft) 84%, var(--danger) 16%)
+    );
+    color: color-mix(in srgb, var(--danger) 86%, var(--ink-0) 14%);
+  }
+
+  .ui-btn-danger:hover {
+    border-color: color-mix(in srgb, var(--danger) 60%, var(--line-1) 40%);
+  }
+
+  .ui-text-muted {
+    color: var(--ink-2);
+  }
+
+  .ui-text-subtle {
+    color: var(--ink-1);
+  }
+
+  .ui-link {
+    color: color-mix(in srgb, var(--accent) 52%, var(--ink-0) 48%);
+  }
+
+  .ui-link:hover {
+    color: var(--accent-strong);
+  }
+
+  .ui-pill-info {
+    border: 1px solid color-mix(in srgb, var(--line-1) 76%, var(--ink-2) 24%);
+    background: color-mix(in srgb, var(--surface-soft) 82%, var(--surface) 18%);
+    color: var(--ink-1);
+  }
+
+  .ui-pill-ok {
+    border: 1px solid color-mix(in srgb, var(--ok) 42%, var(--line-1) 58%);
+    background: color-mix(in srgb, var(--ok) 16%, var(--surface) 84%);
+    color: color-mix(in srgb, var(--ok) 76%, var(--ink-0) 24%);
+  }
+
+  .ui-pill-warn {
+    border: 1px solid color-mix(in srgb, var(--warn) 44%, var(--line-1) 56%);
+    background: color-mix(in srgb, var(--warn) 18%, var(--surface) 82%);
+    color: color-mix(in srgb, var(--warn) 76%, var(--ink-0) 24%);
+  }
+
+  .ui-pill-error {
+    border: 1px solid color-mix(in srgb, var(--danger) 44%, var(--line-1) 56%);
+    background: color-mix(in srgb, var(--danger) 16%, var(--surface) 84%);
+    color: color-mix(in srgb, var(--danger) 80%, var(--ink-0) 20%);
+  }
+
+  .ui-pill-accent {
+    border: 1px solid color-mix(in srgb, var(--accent) 44%, var(--line-1) 56%);
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface) 86%);
+    color: color-mix(in srgb, var(--accent) 74%, var(--ink-0) 26%);
+  }
+
+  html[data-theme='night'] .ui-panel {
+    border-color: color-mix(in srgb, var(--line-1) 72%, var(--accent) 28%);
+    background: color-mix(in srgb, var(--surface) 94%, var(--bg-1) 6%);
+  }
+
+  html[data-theme='night'] .ui-soft-panel {
+    border-color: var(--line-0);
+    background: color-mix(in srgb, var(--surface-soft) 86%, var(--surface) 14%);
+  }
+
+  html[data-theme='night'] .ui-input {
+    border-color: color-mix(in srgb, var(--line-1) 82%, var(--accent) 18%);
+    background: color-mix(in srgb, var(--surface-soft) 82%, var(--surface) 18%);
+  }
+
+  html[data-theme='night'] .ui-btn-secondary {
+    border-color: color-mix(in srgb, var(--line-1) 74%, var(--accent) 26%);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-soft) 82%, var(--accent-ghost) 18%),
+      color-mix(in srgb, var(--surface) 74%, var(--accent-ghost) 26%)
+    );
+    color: var(--ink-0);
+  }
+
+  html[data-theme='night'] .ui-text-muted {
+    color: color-mix(in srgb, var(--ink-2) 88%, var(--ink-1) 12%);
+  }
+
+  html[data-theme='night'] .ui-pill-info {
+    border-color: color-mix(in srgb, var(--line-1) 84%, var(--ink-2) 16%);
+    background: color-mix(in srgb, var(--surface-soft) 88%, var(--surface) 12%);
+    color: var(--ink-0);
+  }
+}
+
+@keyframes msg-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* docx-preview renders real Word layout into .docx-host.
+
+   The page keeps its own geometry — A4 width, the real margins, the header sitting in the
+   top margin — and is SCALED to the pane instead. It used to be forced to `width: 100%`
+   with a flat 1.25rem padding, which made the preview a reflow of the text rather than a
+   picture of the page: line breaks fell elsewhere than they would on paper, and the header
+   (which docx-preview positions with a negative margin measured against the real top margin)
+   was pushed outside the page box and cut off by its `overflow: hidden` — the preview
+   clipping the letterhead it exists to show. The zoom factor is set in docx-preview.tsx,
+   which is the only place that knows how wide the pane actually is. */
+@layer components {
+  .docx-host .docx-wrapper {
+    background: transparent;
+    padding: 0;
+  }
+  .docx-host .docx {
+    /* The sheet has to read AS a sheet: the pane behind it is a shade darker so the page
+       edge is visible, which is how you see that a margin is a margin. */
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.12) !important;
+    border: 1px solid var(--line-0);
+  }
+}

@@ -1,0 +1,18 @@
+# The image is built from the repo, never from a working copy. A local .env in particular
+# must never be baked in: Next's standalone server loads it at runtime, so a developer's
+# LEGAL_FAKE_GRAPH=1 would silently put a DEPLOYED app into fake mode and hand the client
+# synthetic PDFs. (This happened once, on 2026-08-26, when the image was built locally
+# because GitHub Actions could not allocate a runner.)
+.env
+.env.*
+!.env.example
+
+node_modules
+.next
+data-home
+.git
+.github
+tests
+*.sqlite
+*.sqlite-*
+npm-debug.log*

@@ -1,0 +1,22 @@
+# Manual-only by policy: GitHub Actions minutes are a limited shared budget, so nothing
+# triggers on push. The gate before pushing is local:
+#   npm run typecheck && npm run lint && npm test
+# Run this workflow only when a clean-machine proof is worth the minutes:
+#   gh workflow run CI --ref main
+name: CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test

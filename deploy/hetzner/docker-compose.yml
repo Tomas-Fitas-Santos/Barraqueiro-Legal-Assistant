@@ -1,0 +1,33 @@
+# Barraqueiro Legal Assistant — standalone deployment on the shared Hetzner VM.
+# Lives at /opt/naten/deploy/clients/barraqueiro-legal/ on the VM, joined to the
+# shared naten-edge network; the edge Caddy routes barraqueiro-legal.naten.ai here.
+# No published ports — the proxy is the only way in.
+#
+# The .env beside this file (never committed) holds:
+#   LEGAL_SESSION_SECRET, LEGAL_SECRETS_KEY,
+#   LEGAL_BOOTSTRAP_ADMIN_EMAIL, LEGAL_BOOTSTRAP_ADMIN_PASSWORD,
+#   LEGAL_IMAGE (ghcr.io/natenai/legal-assistant:<sha> — sha-pinned, never :latest)
+services:
+  app:
+    image: ${LEGAL_IMAGE}
+    container_name: naten-barraqueiro-legal
+    restart: unless-stopped
+    environment:
+      LEGAL_SESSION_SECRET: ${LEGAL_SESSION_SECRET}
+      LEGAL_SECRETS_KEY: ${LEGAL_SECRETS_KEY}
+      LEGAL_BOOTSTRAP_ADMIN_EMAIL: ${LEGAL_BOOTSTRAP_ADMIN_EMAIL}
+      LEGAL_BOOTSTRAP_ADMIN_PASSWORD: ${LEGAL_BOOTSTRAP_ADMIN_PASSWORD}
+      LEGAL_PUBLIC_BASE_URL: https://barraqueiro-legal.naten.ai
+      LEGAL_SECURE_COOKIES: '1'
+      LEGAL_SYNC_INTERVAL_MINUTES: '15'
+    volumes:
+      - data:/data-home
+    networks:
+      - naten-edge
+
+volumes:
+  data:
+
+networks:
+  naten-edge:
+    external: true
