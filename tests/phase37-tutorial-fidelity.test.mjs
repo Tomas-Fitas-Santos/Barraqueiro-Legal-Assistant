@@ -57,6 +57,29 @@ describe('phase 37 — tutorial fidelity and browser isolation contracts', () =>
     assert.match(repo, /steps\.slice\(step\)/);
   });
 
+  it('uses one resizable half-width artifact viewer in production and training', () => {
+    const slideOver = readFileSync('src/components/ui/slide-over.tsx', 'utf8');
+    const analysis = readFileSync('src/components/analyses/analysis-chat-view.tsx', 'utf8');
+    const workspace = readFileSync('src/components/tutorials/tutorial-workspace.tsx', 'utf8');
+
+    assert.match(slideOver, /Math\.round\(safeAvailable \/ 2\)/);
+    assert.match(slideOver, /data-slide-over-resize-handle/);
+    assert.match(slideOver, /rect\.right - e\.clientX/);
+    assert.match(slideOver, /contained && panelRef\.current\?\.parentElement/);
+
+    // Extraction is an artifact like Word/PDF: it is opened by the shared SidePanel instead
+    // of replacing the analysis workspace with a special inline review screen.
+    assert.match(analysis, /\{panel \? \([\s\S]*?<SidePanel/);
+    assert.doesNotMatch(analysis, /panelStack\[0\]\?\.mode === 'items'/);
+    assert.match(analysis, /panel\.mode === 'document'[\s\S]*panel\.mode === 'version'[\s\S]*panel\.mode === 'pdf'[\s\S]*<ExtractionReview/);
+
+    // The tutorial keeps the real chat/feed behind the same contained slide-over while the
+    // isolated ExtractionReview is open, rather than swapping to a tutorial-only layout.
+    assert.match(workspace, /const extractionPanelOpen = findingsIds\.has\(step\.id\)/);
+    assert.match(workspace, /tab === 'chat'[\s\S]*?<FeedBubble[\s\S]*?extractionPanelOpen \? <SlideOver/);
+    assert.match(workspace, /<SlideOver open contained modal=\{false\}[\s\S]*?<ExtractionReview/);
+  });
+
   it('keeps tutorial previews inside the app viewport and the coach attached to them', () => {
     const detail = readFileSync('src/components/library/document-detail-view.tsx', 'utf8');
     const slideOver = readFileSync('src/components/ui/slide-over.tsx', 'utf8');
