@@ -23,8 +23,15 @@ describe('phase 33 — guidance is one product contract', () => {
 
     const groups = help.HELP_SECTIONS.map((section) => section.group);
     const transitions = groups.filter((group, index) => index === 0 || group !== groups[index - 1]);
-    assert.deepEqual(transitions, ['Começar', 'Preparar', 'Analisar', 'Aprovar', 'Consultar', 'Resolver']);
+    assert.deepEqual(transitions, ['Biblioteca', 'Resumo documental', 'Revisão / Atualização']);
     assert.equal(new Set(transitions).size, transitions.length, 'each chapter must be one contiguous block');
+
+    assert.equal(help.resolveAnalysisHelpContext('analysis.document', 'summary'), 'analysis.summary.document');
+    assert.equal(help.resolveAnalysisHelpContext('analysis.document', 'revision'), 'analysis.revision.document');
+    assert.equal(help.resolveAnalysisHelpContext('analysis.history', 'summary'), 'analysis.summary.history');
+    assert.equal(help.resolveAnalysisHelpContext('analysis.history', 'revision'), 'analysis.revision.history');
+    assert.equal(help.HELP_CONTEXTS['analysis.summary.document'].section, 'aprovar-word');
+    assert.equal(help.HELP_CONTEXTS['analysis.revision.document'].section, 'aprovar-word-revisao');
 
     const nav = readFileSync('src/components/help/help-nav.tsx', 'utf8');
     assert.match(nav, /readingLine/);
