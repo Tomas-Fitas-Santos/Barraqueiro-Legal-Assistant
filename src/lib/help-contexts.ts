@@ -9,8 +9,33 @@ export const HELP_CONTEXTS = {
   'library.template': { section: 'templates', label: 'Como consultar e editar Templates' },
   'library.result': { section: 'resultados', label: 'Como consultar um Resultado' },
 
-  // Resumo documental / Revisão. Estes identificadores continuam partilhados pelo motor
-  // do workflow; o conteúdo contextual é exatamente o mesmo conteúdo apresentado no guia.
+  // Resumo documental — cada botão abre a instrução exata dentro deste capítulo.
+  'analysis.summary.create': { section: 'criar-resumo', label: 'Como criar um Resumo documental' },
+  'analysis.summary.sources': { section: 'preparar-fontes', label: 'Como escolher e confirmar os documentos' },
+  'analysis.summary.extraction': { section: 'rever-resultados-resumo', label: 'Como rever os resultados do resumo' },
+  'analysis.summary.rejected': { section: 'resultado-excluido', label: 'O que fazer com um resultado excluído' },
+  'analysis.summary.reject-all': { section: 'refazer-resultados', label: 'Como rejeitar e refazer os resultados' },
+  'analysis.summary.document': { section: 'aprovar-word', label: 'Como rever e aprovar o Word' },
+  'analysis.summary.pdf': { section: 'aprovar-pdf', label: 'Como rever e aprovar o PDF' },
+  'analysis.summary.email': { section: 'preparar-email', label: 'Como preparar o e-mail' },
+  'analysis.summary.details': { section: 'detalhes-analise', label: 'Como consultar os detalhes da análise' },
+  'analysis.summary.history': { section: 'versoes-historico', label: 'Como consultar versões e histórico' },
+
+  // Revisão / Atualização — percurso completo e independente do capítulo de Resumo.
+  'analysis.revision.create': { section: 'criar-revisao', label: 'Como criar uma Revisão / Atualização' },
+  'analysis.revision.sources': { section: 'confirmar-fontes-revisao', label: 'Como escolher e confirmar os documentos' },
+  'analysis.revision.extraction': { section: 'rever-resultados-revisao', label: 'Como rever e decidir as alterações' },
+  'analysis.revision.rejected': { section: 'resultado-excluido-revisao', label: 'O que fazer com um resultado excluído' },
+  'analysis.revision.reject-all': { section: 'refazer-resultados-revisao', label: 'Como rejeitar e refazer os resultados' },
+  'analysis.revision.return': { section: 'voltar-fase', label: 'Como voltar a uma fase anterior' },
+  'analysis.revision.document': { section: 'aprovar-word-revisao', label: 'Como rever e aprovar o Word' },
+  'analysis.revision.pdf': { section: 'aprovar-pdf-revisao', label: 'Como rever e aprovar o PDF' },
+  'analysis.revision.email': { section: 'preparar-email-revisao', label: 'Como preparar o e-mail' },
+  'analysis.revision.details': { section: 'detalhes-analise-revisao', label: 'Como consultar os detalhes da análise' },
+  'analysis.revision.history': { section: 'versoes-historico-revisao', label: 'Como consultar versões e histórico' },
+
+  // Compatibilidade com o motor de workflow existente. Os botões resolvem estes contextos
+  // genéricos para o capítulo certo através de resolveAnalysisHelpContext().
   'analysis.sources': { section: 'preparar-fontes', label: 'Como escolher e confirmar os documentos' },
   'analysis.relations': { section: 'confirmar-fontes-revisao', label: 'Como confirmar os documentos de apoio' },
   'analysis.extraction.summary': { section: 'rever-resultados-resumo', label: 'Como rever os resultados do resumo' },
@@ -24,11 +49,60 @@ export const HELP_CONTEXTS = {
   'analysis.details': { section: 'detalhes-analise', label: 'Como consultar os detalhes da análise' },
   'analysis.history': { section: 'versoes-historico', label: 'Como consultar versões e histórico' },
 
-  // Mantido para os botões existentes fora dos três percursos principais.
   tutorials: { section: 'biblioteca', label: 'Consultar as instruções da aplicação' },
 } as const;
 
 export type HelpContextId = keyof typeof HELP_CONTEXTS;
+export type HelpAnalysisType = 'summary' | 'revision';
+
+const GENERIC_ANALYSIS_CONTEXTS: Partial<Record<HelpContextId, Record<HelpAnalysisType, HelpContextId>>> = {
+  'analysis.sources': {
+    summary: 'analysis.summary.sources',
+    revision: 'analysis.revision.sources',
+  },
+  'analysis.relations': {
+    summary: 'analysis.summary.sources',
+    revision: 'analysis.revision.sources',
+  },
+  'analysis.extraction.rejected': {
+    summary: 'analysis.summary.rejected',
+    revision: 'analysis.revision.rejected',
+  },
+  'analysis.extraction.reject-all': {
+    summary: 'analysis.summary.reject-all',
+    revision: 'analysis.revision.reject-all',
+  },
+  'analysis.return': {
+    summary: 'analysis.summary.history',
+    revision: 'analysis.revision.return',
+  },
+  'analysis.document': {
+    summary: 'analysis.summary.document',
+    revision: 'analysis.revision.document',
+  },
+  'analysis.pdf': {
+    summary: 'analysis.summary.pdf',
+    revision: 'analysis.revision.pdf',
+  },
+  'analysis.email': {
+    summary: 'analysis.summary.email',
+    revision: 'analysis.revision.email',
+  },
+  'analysis.details': {
+    summary: 'analysis.summary.details',
+    revision: 'analysis.revision.details',
+  },
+  'analysis.history': {
+    summary: 'analysis.summary.history',
+    revision: 'analysis.revision.history',
+  },
+};
+
+export function resolveAnalysisHelpContext(context: HelpContextId, type: HelpAnalysisType): HelpContextId {
+  if (context === 'analysis.extraction.summary') return 'analysis.summary.extraction';
+  if (context === 'analysis.extraction.revision') return 'analysis.revision.extraction';
+  return GENERIC_ANALYSIS_CONTEXTS[context]?.[type] || context;
+}
 
 export const HELP_CHAPTERS = ['Biblioteca', 'Resumo documental', 'Revisão / Atualização'] as const;
 export type HelpChapter = (typeof HELP_CHAPTERS)[number];
