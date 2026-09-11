@@ -19,13 +19,13 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
 
           path = Path('src/components/tutorials/tutorial-workspace.tsx')
           text = path.read_text()
           text = text.replace('AnalysisTabs, DetalhesTab, EmailEditor', 'AnalysisTabs, EmailEditor')
-          text = re.sub(r"^\s*\{tab === 'detalhes' \? <DetalhesTab .*?\} : null\}\n", '', text, flags=re.MULTILINE)
-          path.write_text(text)
+          lines = text.splitlines(keepends=True)
+          lines = [line for line in lines if "{tab === 'detalhes' ? <DetalhesTab" not in line]
+          path.write_text(''.join(lines))
           PY
       - name: Commit fixes if needed
         run: |
@@ -33,7 +33,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add src/components/tutorials/tutorial-workspace.tsx
-            git commit -m "Fix tutorial analysis tab typecheck [skip ci]"
+            git commit -m "Remove unreachable tutorial details branch [skip ci]"
             git push origin HEAD:fix/validate-production
           fi
 
@@ -68,6 +68,7 @@ jobs:
   tests:
     needs: autofix
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
